@@ -1,0 +1,51 @@
+name: Azure CI/CD
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CONTAINER_REGISTRY: hvalfangstcontainerregistry.azurecr.io
+      IMAGE_NAME: hvalfangst-flask-table-storage
+      RESOURCE_GROUP: hvalfangstresourcegroup
+      LOCATION: West Europe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Azure Login with Service Principal
+        run: |
+          az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+      
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.CONTAINER_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest --build-arg ACCESS_KEY="${{ secrets.ACCESS_KEY }}" .
+          docker push ${{ env.CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to Azure Container Instances
+        uses: azure/aci-deploy@v1
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          dns-name-label: ${{ env.IMAGE_NAME }}
+          name: ${{ env.IMAGE_NAME }}
+          image: ${{ env.CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          location: ${{ env.LOCATION }}
+          registry-login-server: ${{ env.CONTAINER_REGISTRY }}
+          registry-username: ${{ secrets.ACR_USERNAME }}
+          registry-password: ${{ secrets.ACR_PASSWORD }}
