@@ -16,6 +16,8 @@ jobs:
       IMAGE_NAME: hvalfangst-flask-table-storage
       RESOURCE_GROUP: hvalfangstresourcegroup
       LOCATION: West Europe
+      AZURE_KEYVAULT_NAME: hvalfangstkeyvault
+      STORAGE_ACC_KEY: storage-account-key
 
     steps:
       - name: Checkout repository
@@ -24,7 +26,11 @@ jobs:
       - name: Run Azure Login with Service Principal
         run: |
           az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-      
+
+      - name: Get Secret from Key Vault
+        id: get_secret
+        run: |
+          echo "value=$(az keyvault secret show --name ${{ env.STORAGE_ACC_KEY }} --vault-name ${{ env.AZURE_KEYVAULT_NAME }} --query value -o tsv)" >> $GITHUB_OUTPUT
 
       - name: Login to Azure Container Registry
         uses: azure/docker-login@v1
@@ -35,7 +41,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ env.CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest --build-arg ACCESS_KEY="${{ secrets.ACCESS_KEY }}" .
+          docker build -t ${{ env.CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest --build-arg ACCESS_KEY="${{steps.get_secret.outputs.value}}" .
           docker push ${{ env.CONTAINER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Deploy to Azure Container Instances
