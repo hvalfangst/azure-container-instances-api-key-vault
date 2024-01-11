@@ -1,11 +1,11 @@
 from gunicorn.app.base import BaseApplication
-from main import app
+from main import flask_api
 
 
 class StandaloneApplication(BaseApplication):
-    def __init__(self, app, options=None):
+    def __init__(self, api, options=None):
         self.options = options or {}
-        self.application = app
+        self.application = api
         super().__init__()
 
     def load_config(self):
@@ -21,4 +21,4 @@ class StandaloneApplication(BaseApplication):
 
 
 if __name__ == '__main__':
-    StandaloneApplication(app, {}).run()
+    StandaloneApplication(flask_api, {}).run()

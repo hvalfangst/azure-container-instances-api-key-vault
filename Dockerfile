@@ -19,5 +19,5 @@ ENV ACCESS_KEY=$ACCESS_KEY
 # Install all the dependencies required to run the Flask application
 RUN pip install -r requirements.txt
 
-# Run the application using gunicorn with 4 workers at port 80 as this is what ACI targets
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:80", "wsgi:app"]
+# Run the application using gunicorn with 8 workers at port 80 as this is what ACI targets
+CMD ["gunicorn", "-w", "8", "-b", "0.0.0.0:80", "wsgi:flask_api"]
