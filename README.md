@@ -31,10 +31,12 @@ The shell script 'down' deallocates Azure resources.
 - Open your browser and navigate to the Azure Portal.
 
 ### 3. Container Registry Setup
+In order to interact with our container registry, we need first need to authenticate ourselves and thus need its associated admin credentials.
 
-- Go to the newly provisioned Container Registry named 'hvalfangstcontainerregistry'.
-- Click on 'Access keys' under the 'Settings' section.
-- Store the registry name and password for future use.
+Run the following command to receive a list of two passwords. Store the first password for later.
+~~~
+az acr credential show --name hvalfangstcontainerregistry
+~~~
 
 ### 4. Get storage account access key
 
@@ -87,7 +89,7 @@ az keyvault secret set --name storage-account-key --value {ACCESS_KEY} --vault-n
 - Open the 'Settings' tab of your GitHub repository.
 - Click on 'Actions' under 'Security' -> 'Secrets and variables'.
 - Create the following repository secrets:
-    - ACR_USERNAME: Value stored in step #3
+    - ACR_USERNAME: hvalfangstcontainerregistry
     - ACR_PASSWORD: Value stored in step #3
     - AZURE_CLIENT_ID: Value stored in step #4
     - AZURE_TENANT_ID: Value stored in step #4
